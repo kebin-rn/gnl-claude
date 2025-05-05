@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "get_next_line_bonus.h"
+include "get_next_line_bonus.h"
 
 size_t	ft_strlen(const char *s)
 {
@@ -26,31 +26,20 @@ size_t	ft_strlen(const char *s)
 
 char	*ft_strchr(const char *s, int c)
 {
+	int	i;
+
+	i = 0;
 	if (!s)
-		return (NULL);
-	while (*s)
+		return (0);
+	while (s[i])
 	{
-		if (*s == (char)c)
-			return ((char *)s);
-		s++;
+		if (s[i] == (char)c)
+			return ((char *)&s[i]);
+		i++;
 	}
 	if ((char)c == '\0')
-		return ((char *)s);
-	return (NULL);
-}
-
-static char	*handle_edge_cases(char *s1, char *s2)
-{
-	if (!s1)
-	{
-		s1 = malloc(sizeof(char));
-		if (!s1)
-			return (NULL);
-		s1[0] = '\0';
-	}
-	if (!s2)
-		return (s1);
-	return (NULL);
+		return ((char *)&s[i]);
+	return (0);
 }
 
 char	*ft_strjoin(char *s1, char *s2)
@@ -59,18 +48,16 @@ char	*ft_strjoin(char *s1, char *s2)
 	size_t	i;
 	size_t	j;
 
-	if (!s2)
-		return (s1);
 	if (!s1)
 	{
-		s1 = malloc(sizeof(char));
-		if (!s1)
-			return (NULL);
+		s1 = (char *)malloc(1 * sizeof(char));
 		s1[0] = '\0';
 	}
-	str = malloc(sizeof(char) * (ft_strlen(s1) + ft_strlen(s2) + 1));
+	if (!s1 || !s2)
+		return (NULL);
+	str = malloc(ft_strlen(s1) + ft_strlen(s2) + 1);
 	if (!str)
-		return (free(s1), NULL);
+		return (NULL);
 	i = -1;
 	while (s1[++i])
 		str[i] = s1[i];
@@ -78,5 +65,6 @@ char	*ft_strjoin(char *s1, char *s2)
 	while (s2[j])
 		str[i++] = s2[j++];
 	str[i] = '\0';
-	return (free(s1), str);
+	free(s1);
+	return (str);
 }
