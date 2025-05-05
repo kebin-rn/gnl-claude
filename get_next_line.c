@@ -12,113 +12,100 @@
 
 #include "get_next_line.h"
 
-char	*handle_read_error(char *buffer, char *saved)
+static char *gnl_extract_line(char *remainder)
 {
-	free(buffer);
-	free(saved);
-	return (NULL);
+    char    *line;
+    int     i;
+
+    i = 0;
+    if (!remainder || !remainder[0])
+        return (NULL);
+    while (remainder[i] && remainder[i] != '\n')
+        i++;
+    if (remainder[i] == '\n')
+        i++;
+    line = malloc(sizeof(char) * (i + 1));
+    if (!line)
+        return (NULL);
+    i = 0;
+    while (remainder[i] && remainder[i] != '\n')
+    {
+        line[i] = remainder[i];
+        i++;
+    }
+    if (remainder[i] == '\n')
+        line[i++] = '\n';
+    line[i] = '\0';
+    return (line);
 }
 
-char	*read_to_static_buffer(int fd, char *saved)
+static char *gnl_update_buffer(char *remainder)
 {
-	char	*buffer;
-	int		read_bytes;
+    char    *new_remainder;
+    int     i;
+    int     j;
 
-	buffer = malloc((BUFFER_SIZE + 1) * sizeof(char));
-	if (!buffer)
-		return (NULL);
-	read_bytes = 1;
-	while (!ft_strchr(saved, '\n') && read_bytes != 0)
-	{
-		read_bytes = read(fd, buffer, BUFFER_SIZE);
-		if (read_bytes == -1)
-			return (handle_read_error(buffer, saved));
-		buffer[read_bytes] = '\0';
-		saved = ft_strjoin(saved, buffer);
-		if (!saved)
-		{
-			free(buffer);
-			return (NULL);
-		}
-	}
-	free(buffer);
-	return (saved);
+    i = 0;
+    while (remainder[i] && remainder[i] != '\n')
+        i++;
+    if (remainder[i] == '\n')
+        i++;
+    if (!remainder[i])
+    {
+        free(remainder);
+        return (NULL);
+    }
+    new_remainder = malloc(sizeof(char) * (gnl_strlen(remainder) - i + 1));
+    if (!new_remainder)
+    {
+        free(remainder);
+        return (NULL);
+    }
+    j = 0;
+    while (remainder[i])
+        new_remainder[j++] = remainder[i++];
+    new_remainder[j] = '\0';
+    free(remainder);
+    return (new_remainder);
 }
 
-char	*extract_line(char *buffer)
+static char *gnl_read_file(int fd, char *remainder)
 {
-	int		i;
-	char	*line;
+    char    *buffer;
+    ssize_t bytes_read;
 
-	i = 0;
-	if (!buffer[i])
-		return (NULL);
-	while (buffer[i] && buffer[i] != '\n')
-		i++;
-	line = malloc(sizeof(char) * (i + 2));
-	if (!line)
-		return (NULL);
-	i = 0;
-	while (buffer[i] && buffer[i] != '\n')
-	{
-		line[i] = buffer[i];
-		i++;
-	}
-	if (buffer[i] == '\n')
-	{
-		line[i] = buffer[i];
-		i++;
-	}
-	line[i] = '\0';
-	return (line);
+    buffer = malloc(sizeof(char) * (BUFFER_SIZE + 1));
+    if (!buffer)
+        return (NULL);
+    bytes_read = 1;
+    while (bytes_read > 0 && !gnl_strchr(remainder, '\n'))
+    {
+        bytes_read = read(fd, buffer, BUFFER_SIZE);
+        if (bytes_read < 0)
+        {
+            free(buffer);
+            if (remainder)
+                free(remainder);
+            return (NULL);
+        }
+        buffer[bytes_read] = '\0';
+        remainder = gnl_strjoin(remainder, buffer);
+    }
+    free(buffer);
+    return (remainder);
 }
 
-char	*save_remaining(char *buffer)
+char    *get_next_line(int fd)
 {
-	int		i;
-	int		j;
-	char	*new_buffer;
+    static char *remainder;
+    char        *line;
 
-	i = 0;
-	while (buffer[i] && buffer[i] != '\n')
-		i++;
-	if (!buffer[i])
-	{
-		free(buffer);
-		return (NULL);
-	}
-	new_buffer = malloc(sizeof(char) * (ft_strlen(buffer) - i + 1));
-	if (!new_buffer)
-	{
-		free(buffer);
-		return (NULL);
-	}
-	i++;
-	j = 0;
-	while (buffer[i])
-		new_buffer[j++] = buffer[i++];
-	new_buffer[j] = '\0';
-	free(buffer);
-	return (new_buffer);
-}
-
-char	*get_next_line(int fd)
-{
-	char		*line;
-	static char	*buffer;
-
-	if (fd < 0 || BUFFER_SIZE <= 0)
-		return (NULL);
-	buffer = read_to_static_buffer(fd, buffer);
-	if (!buffer)
-		return (NULL);
-	line = extract_line(buffer);
-	if (!line)
-	{
-		free(buffer);
-		buffer = NULL;
-		return (NULL);
-	}
-	buffer = save_remaining(buffer);
-	return (line);
+    if (fd < 0 || BUFFER_SIZE <= 0 || read(fd, 0, 0) < 0)
+        return (NULL);
+    remainder = gnl_read_file(fd, remainder);
+    if (!remainder)
+        return (NULL);
+    line = gnl_extract_line(remainder);
+    remainder = gnl_update_buffer(remainder);
+    return (line);
 }

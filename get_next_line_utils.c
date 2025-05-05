@@ -12,87 +12,61 @@
 
 #include "get_next_line.h"
 
-size_t	ft_strlen(const char *s)
+size_t  gnl_strlen(char *str)
 {
-	size_t	i;
+    size_t  i;
 
-	i = 0;
-	if (!s)
-		return (0);
-	while (s[i])
-		i++;
-	return (i);
+    i = 0;
+    if (!str)
+        return (0);
+    while (str[i])
+        i++;
+    return (i);
 }
 
-char	*ft_strchr(const char *s, int c)
+char    *gnl_strchr(char *str, int c)
 {
-	if (!s)
-		return (NULL);
-	while (*s)
-	{
-		if (*s == (char)c)
-			return ((char *)s);
-		s++;
-	}
-	if ((char)c == '\0')
-		return ((char *)s);
-	return (NULL);
+    if (!str)
+        return (NULL);
+    while (*str)
+    {
+        if (*str == (char)c)
+            return (str);
+        str++;
+    }
+    if ((char)c == '\0')
+        return (str);
+    return (NULL);
 }
 
-char	*malloc_empty_str(void)
+char    *gnl_strjoin(char *s1, char *s2)
 {
-	char	*empty;
+    char    *result;
+    size_t  i;
+    size_t  j;
 
-	empty = malloc(1);
-	if (!empty)
-		return (NULL);
-	empty[0] = '\0';
-	return (empty);
-}
-
-char	*join_strings(char *s1, char *s2, char *str)
-{
-	size_t	i;
-	size_t	j;
-
-	i = 0;
-	j = 0;
-	while (s1[i])
-	{
-		str[i] = s1[i];
-		i++;
-	}
-	while (s2[j])
-	{
-		str[i] = s2[j];
-		i++;
-		j++;
-	}
-	str[i] = '\0';
-	free(s1);
-	return (str);
-}
-
-char	*ft_strjoin(char *s1, char *s2)
-{
-	char	*str;
-
-	if (!s1)
-	{
-		s1 = malloc_empty_str();
-		if (!s1)
-			return (NULL);
-	}
-	if (!s2)
-	{
-		free(s1);
-		return (NULL);
-	}
-	str = malloc(sizeof(char) * (ft_strlen(s1) + ft_strlen(s2) + 1));
-	if (!str)
-	{
-		free(s1);
-		return (NULL);
-	}
-	return (join_strings(s1, s2, str));
+    if (!s1)
+    {
+        s1 = malloc(sizeof(char));
+        if (!s1)
+            return (NULL);
+        s1[0] = '\0';
+    }
+    if (!s2)
+        return (s1);
+    result = malloc(sizeof(char) * (gnl_strlen(s1) + gnl_strlen(s2) + 1));
+    if (!result)
+    {
+        free(s1);
+        return (NULL);
+    }
+    i = -1;
+    while (s1[++i])
+        result[i] = s1[i];
+    j = 0;
+    while (s2[j])
+        result[i++] = s2[j++];
+    result[i] = '\0';
+    free(s1);
+    return (result);
 }
