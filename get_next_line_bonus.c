@@ -27,7 +27,7 @@ static char	*read_to_stash(int fd, char *stash)
 		if (bytes_read == -1)
 		{
 			free(buffer);
-			return (NULL);  // Don't free stash on read error
+			return (NULL);
 		}
 		buffer[bytes_read] = '\0';
 		stash = ft_strjoin(stash, buffer);
@@ -36,19 +36,12 @@ static char	*read_to_stash(int fd, char *stash)
 	return (stash);
 }
 
-static char	*extract_line(char *stash)
+static char	*create_line(char *stash, int len)
 {
-	int		i;
 	char	*line;
+	int		i;
 
-	i = 0;
-	if (!stash || !stash[i])
-		return (NULL);
-	while (stash[i] && stash[i] != '\n')
-		i++;
-	if (stash[i] == '\n')
-		i++;
-	line = malloc(sizeof(char) * (i + 1));
+	line = malloc(sizeof(char) * (len + 1));
 	if (!line)
 		return (NULL);
 	i = 0;
@@ -58,16 +51,54 @@ static char	*extract_line(char *stash)
 		i++;
 	}
 	if (stash[i] == '\n')
-		line[i++] = '\n';
+	{
+		line[i] = '\n';
+		i++;
+	}
 	line[i] = '\0';
 	return (line);
 }
 
-static char	*update_stash(char *stash)
+static char	*extract_line(char *stash)
 {
 	int		i;
-	int		j;
+
+	i = 0;
+	if (!stash || !stash[i])
+		return (NULL);
+	while (stash[i] && stash[i] != '\n')
+		i++;
+	if (stash[i] == '\n')
+		i++;
+	return (create_line(stash, i));
+}
+
+static char	*create_new_stash(char *stash, int i)
+{
 	char	*new_stash;
+	int		j;
+
+	new_stash = malloc(sizeof(char) * (ft_strlen(stash) - i + 1));
+	if (!new_stash)
+	{
+		free(stash);
+		return (NULL);
+	}
+	j = 0;
+	while (stash[i])
+	{
+		new_stash[j] = stash[i];
+		j++;
+		i++;
+	}
+	new_stash[j] = '\0';
+	free(stash);
+	return (new_stash);
+}
+
+static char	*update_stash(char *stash)
+{
+	int	i;
 
 	i = 0;
 	if (!stash)
@@ -80,15 +111,7 @@ static char	*update_stash(char *stash)
 		return (NULL);
 	}
 	i++;
-	new_stash = malloc(sizeof(char) * (ft_strlen(stash) - i + 1));
-	if (!new_stash)
-		return (free(stash), NULL);
-	j = 0;
-	while (stash[i])
-		new_stash[j++] = stash[i++];
-	new_stash[j] = '\0';
-	free(stash);
-	return (new_stash);
+	return (create_new_stash(stash, i));
 }
 
 char	*get_next_line(int fd)
@@ -101,7 +124,7 @@ char	*get_next_line(int fd)
 		return (NULL);
 	temp = read_to_stash(fd, stashes[fd]);
 	if (!temp && stashes[fd])
-		return (NULL);  // Return NULL on error but keep stash
+		return (NULL);
 	stashes[fd] = temp;
 	if (!stashes[fd])
 		return (NULL);

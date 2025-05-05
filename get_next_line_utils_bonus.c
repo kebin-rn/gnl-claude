@@ -39,11 +39,39 @@ char	*ft_strchr(const char *s, int c)
 	return (NULL);
 }
 
-char	*ft_strjoin(char *s1, char *s2)
+static char	*create_and_fill(char *s1, char *s2, size_t len1, size_t len2)
 {
 	char	*str;
 	size_t	i;
 	size_t	j;
+
+	str = malloc(sizeof(char) * (len1 + len2 + 1));
+	if (!str)
+	{
+		free(s1);
+		return (NULL);
+	}
+	i = 0;
+	while (i < len1)
+	{
+		str[i] = s1[i];
+		i++;
+	}
+	j = 0;
+	while (j < len2)
+	{
+		str[i + j] = s2[j];
+		j++;
+	}
+	str[i + j] = '\0';
+	free(s1);
+	return (str);
+}
+
+char	*ft_strjoin(char *s1, char *s2)
+{
+	size_t	len1;
+	size_t	len2;
 
 	if (!s1)
 	{
@@ -52,26 +80,9 @@ char	*ft_strjoin(char *s1, char *s2)
 			return (NULL);
 		s1[0] = '\0';
 	}
-	str = malloc(sizeof(char) * (ft_strlen(s1) + ft_strlen(s2) + 1));
-	if (!str)
-	{
-		free(s1);
-		return (NULL);
-	}
-	i = 0;
-	while (s1[i])
-	{
-		str[i] = s1[i];
-		i++;
-	}
-	j = 0;
-	while (s2[j])
-	{
-		str[i] = s2[j];
-		i++;
-		j++;
-	}
-	str[i] = '\0';
-	free(s1);
-	return (str);
+	if (!s2)
+		return (s1);
+	len1 = ft_strlen(s1);
+	len2 = ft_strlen(s2);
+	return (create_and_fill(s1, s2, len1, len2));
 }
