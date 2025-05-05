@@ -63,27 +63,52 @@ static char	*extract_line(char *stash)
 	return (line);
 }
 
-static char	*update_stash(char *stash)
+static char	*create_new_stash(char *stash, int i)
 {
-	int		i;
 	int		j;
 	char	*new_stash;
 
-	i = 0;
+	new_stash = malloc(sizeof(char) * (ft_strlen(stash) - i + 1));
+	if (!new_stash)
+		return (free(stash), NULL);
+	j = 0;
+	while (stash[i])
+		new_stash[j++] = stash[i++];
+	new_stash[j] = '\0';
+	free(stash);
+	return (new_stash);
+}
+
+static char	*update_stash(char *stash)
+{
+	int		i;
+
 	if (!stash)
 		return (NULL);
+	i = 0;
 	while (stash[i] && stash[i] != '\n')
 		i++;
 	if (!stash[i])
-	{
-		free(stash);
-		return (NULL);
-	}
-	new_stash = malloc(sizeof(char) * (ft_strlen(stash) - i + 1));
-	if (!new_stash)
-	{
-		free(stash);
-		return (NULL);
-	}
+		return (free(stash), NULL);
 	i++;
-	j = 0;
+	return (create_new_stash(stash, i));
+}
+
+char	*get_next_line(int fd)
+{
+	static char	*stash;
+	char		*line;
+	char		*temp;
+
+	if (fd < 0 || BUFFER_SIZE <= 0 || read(fd, 0, 0) < 0)
+		return (NULL);
+	temp = read_to_stash(fd, stash);
+	if (!temp && stash)
+		return (NULL);
+	stash = temp;
+	if (!stash)
+		return (NULL);
+	line = extract_line(stash);
+	stash = update_stash(stash);
+	return (line);
+}

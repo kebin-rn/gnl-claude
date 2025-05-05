@@ -65,22 +65,15 @@ static char	*extract_line(char *stash)
 
 static char	*create_new_stash(char *stash, int i)
 {
-	char	*new_stash;
 	int		j;
+	char	*new_stash;
 
 	new_stash = malloc(sizeof(char) * (ft_strlen(stash) - i + 1));
 	if (!new_stash)
-	{
-		free(stash);
-		return (NULL);
-	}
+		return (free(stash), NULL);
 	j = 0;
 	while (stash[i])
-	{
-		new_stash[j] = stash[i];
-		j++;
-		i++;
-	}
+		new_stash[j++] = stash[i++];
 	new_stash[j] = '\0';
 	free(stash);
 	return (new_stash);
@@ -88,18 +81,15 @@ static char	*create_new_stash(char *stash, int i)
 
 static char	*update_stash(char *stash)
 {
-	int	i;
+	int		i;
 
-	i = 0;
 	if (!stash)
 		return (NULL);
+	i = 0;
 	while (stash[i] && stash[i] != '\n')
 		i++;
 	if (!stash[i])
-	{
-		free(stash);
-		return (NULL);
-	}
+		return (free(stash), NULL);
 	i++;
 	return (create_new_stash(stash, i));
 }
