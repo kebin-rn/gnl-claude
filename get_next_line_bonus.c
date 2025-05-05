@@ -41,9 +41,9 @@ static char	*extract_line(char *stash)
 	int		i;
 	char	*line;
 
-	i = 0;
-	if (!stash || !stash[i])
+	if (!stash || !stash[0])
 		return (NULL);
+	i = 0;
 	while (stash[i] && stash[i] != '\n')
 		i++;
 	if (stash[i] == '\n')
@@ -51,17 +51,11 @@ static char	*extract_line(char *stash)
 	line = malloc(sizeof(char) * (i + 1));
 	if (!line)
 		return (NULL);
-	i = 0;
-	while (stash[i] && stash[i] != '\n')
-	{
+	i = -1;
+	while (stash[++i] && stash[i] != '\n')
 		line[i] = stash[i];
-		i++;
-	}
 	if (stash[i] == '\n')
-	{
-		line[i] = '\n';
-		i++;
-	}
+		line[i++] = '\n';
 	line[i] = '\0';
 	return (line);
 }
@@ -72,29 +66,22 @@ static char	*update_stash(char *stash)
 	int		j;
 	char	*new_stash;
 
-	i = 0;
 	if (!stash)
 		return (NULL);
+	i = 0;
 	while (stash[i] && stash[i] != '\n')
 		i++;
 	if (!stash[i])
-	{
-		free(stash);
-		return (NULL);
-	}
+		return (free(stash), NULL);
 	i++;
 	new_stash = malloc(sizeof(char) * (ft_strlen(stash) - i + 1));
 	if (!new_stash)
-	{
-		free(stash);
-		return (NULL);
-	}
+		return (free(stash), NULL);
 	j = 0;
 	while (stash[i])
 		new_stash[j++] = stash[i++];
 	new_stash[j] = '\0';
-	free(stash);
-	return (new_stash);
+	return (free(stash), new_stash);
 }
 
 char	*get_next_line(int fd)
