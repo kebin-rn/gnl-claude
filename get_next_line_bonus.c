@@ -12,110 +12,95 @@
 
 #include "get_next_line_bonus.h"
 
-static char *gnl_extract_line(char *remainder)
+static char	*read_to_stash(int fd, char *stash)
 {
-    char    *line;
-    int     i;
+	char	*buffer;
+	int		bytes_read;
 
-    i = 0;
-    if (!remainder || !remainder[0])
-        return (NULL);
-    while (remainder[i] && remainder[i] != '\n')
-        i++;
-    if (remainder[i] == '\n')
-        i++;
-    line = malloc(sizeof(char) * (i + 1));
-    if (!line)
-        return (NULL);
-    i = 0;
-    while (remainder[i] && remainder[i] != '\n')
-    {
-        line[i] = remainder[i];
-        i++;
-    }
-    if (remainder[i] == '\n')
-        line[i++] = '\n';
-    line[i] = '\0';
-    return (line);
+	buffer = malloc((BUFFER_SIZE + 1) * sizeof(char));
+	if (!buffer)
+		return (NULL);
+	bytes_read = 1;
+	while (bytes_read > 0 && !ft_strchr(stash, '\n'))
+	{
+		bytes_read = read(fd, buffer, BUFFER_SIZE);
+		if (bytes_read == -1)
+		{
+			free(buffer);
+			free(stash);
+			return (NULL);
+		}
+		buffer[bytes_read] = '\0';
+		stash = ft_strjoin(stash, buffer);
+	}
+	free(buffer);
+	return (stash);
 }
 
-static char *gnl_update_buffer(char *remainder)
+static char	*extract_line(char *stash)
 {
-    char    *new_remainder;
-    int     i;
-    int     j;
+	int		i;
+	char	*line;
 
-    i = 0;
-    while (remainder[i] && remainder[i] != '\n')
-        i++;
-    if (remainder[i] == '\n')
-        i++;
-    if (!remainder[i])
-    {
-        free(remainder);
-        return (NULL);
-    }
-    new_remainder = malloc(sizeof(char) * (gnl_strlen(remainder) - i + 1));
-    if (!new_remainder)
-    {
-        free(remainder);
-        return (NULL);
-    }
-    j = 0;
-    while (remainder[i])
-        new_remainder[j++] = remainder[i++];
-    new_remainder[j] = '\0';
-    free(remainder);
-    return (new_remainder);
+	i = 0;
+	if (!stash[i])
+		return (NULL);
+	while (stash[i] && stash[i] != '\n')
+		i++;
+	if (stash[i] == '\n')
+		i++;
+	line = malloc(sizeof(char) * (i + 1));
+	if (!line)
+		return (NULL);
+	i = 0;
+	while (stash[i] && stash[i] != '\n')
+	{
+		line[i] = stash[i];
+		i++;
+	}
+	if (stash[i] == '\n')
+		line[i++] = '\n';
+	line[i] = '\0';
+	return (line);
 }
 
-static char *gnl_read_file(int fd, char *remainder)
+static char	*update_stash(char *stash)
 {
-    char    *buffer;
-    ssize_t bytes_read;
+	int		i;
+	int		j;
+	char	*new_stash;
 
-    buffer = malloc(sizeof(char) * (BUFFER_SIZE + 1));
-    if (!buffer)
-        return (NULL);
-    bytes_read = 1;
-    while (bytes_read > 0 && !gnl_strchr(remainder, '\n'))
-    {
-        bytes_read = read(fd, buffer, BUFFER_SIZE);
-        if (bytes_read < 0)
-        {
-            free(buffer);
-            if (remainder)
-                free(remainder);
-            return (NULL);
-        }
-        buffer[bytes_read] = '\0';
-        remainder = gnl_strjoin(remainder, buffer);
-    }
-    free(buffer);
-    return (remainder);
+	i = 0;
+	while (stash[i] && stash[i] != '\n')
+		i++;
+	if (!stash[i])
+	{
+		free(stash);
+		return (NULL);
+	}
+	i++;
+	new_stash = malloc(sizeof(char) * (ft_strlen(stash) - i + 1));
+	if (!new_stash)
+		return (free(stash), NULL);
+	j = 0;
+	while (stash[i])
+		new_stash[j++] = stash[i++];
+	new_stash[j] = '\0';
+	free(stash);
+	return (new_stash);
 }
 
-char    *get_next_line(int fd)
+char	*get_next_line(int fd)
 {
-    static t_list   *list;
-    t_list          *node;
-    char            *line;
+	static char	*stashes[1024];
+	char		*line;
 
-    if (fd < 0 || BUFFER_SIZE <= 0 || read(fd, 0, 0) < 0)
-        return (NULL);
-    node = gnl_lstfind(list, fd);
-    if (!node)
-    {
-        node = gnl_lstnew(fd);
-        if (!node)
-            return (NULL);
-        node->next = list;
-        list = node;
-    }
-    node->remainder = gnl_read_file(fd, node->remainder);
-    if (!node->remainder)
-        return (NULL);
-    line = gnl_extract_line(node->remainder);
-    node->remainder = gnl_update_buffer(node->remainder);
-    return (line);
+	if (fd < 0 || fd >= 1024 || BUFFER_SIZE <= 0 || read(fd, 0, 0) < 0)
+		return (NULL);
+	stashes[fd] = read_to_stash(fd, stashes[fd]);
+	if (!stashes[fd])
+		return (NULL);
+	line = extract_line(stashes[fd]);
+	stashes[fd] = update_stash(stashes[fd]);
+	return (line);
 }
